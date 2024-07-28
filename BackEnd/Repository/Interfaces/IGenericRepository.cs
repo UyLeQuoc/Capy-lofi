@@ -1,5 +1,5 @@
-﻿using System.Linq.Expressions;
-using Domain.Entities;
+﻿using Domain.Entities;
+using System.Linq.Expressions;
 
 namespace Repository.Interfaces;
 
@@ -20,10 +20,9 @@ public interface IGenericRepository<TEntity> where TEntity : BaseEntity
     Task<bool> SoftRemoveRange(List<TEntity> entities);
 
     Task<bool> SoftRemove(TEntity entity);
-
     Task AddRangeAsync(List<TEntity> entities);
 
     IQueryable<TEntity> GetQueryable();
 
-   
+
 }

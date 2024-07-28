@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Domain.Entities;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.EntityFrameworkCore;
 using Repository;
 using Repository.Commons;
 using Repository.Interfaces;
+using Repository.Repositories;
 using Service;
 using Service.Interfaces;
+using Service.Services;
 
 namespace API.Dependencies
 {
@@ -33,13 +36,40 @@ namespace API.Dependencies
                 });
 
             services.AddScoped<IAuthenticationService, GoogleAuthenticationService>();
-            services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IAuthRepository, AuthRepository>();
             services.AddScoped<ITokenGenerators, TokenGenerators>();
             services.AddScoped<ICurrentTime, CurrentTime>();
             services.AddScoped<IClaimsService, ClaimsService>();
+
+            // Add UNIT OF WORK
+            services.AddProjectUnitOfWork();
+
             services.AddHttpContextAccessor();
             services.AddHttpClient<GoogleAuthenticationService>();
+
+            return services;
+        }
+
+        public static IServiceCollection AddProjectUnitOfWork(this IServiceCollection services)
+        {
+            // Add repositories
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddScoped<IBackgroundRepository, BackgroundRepository>();
+            services.AddScoped<IMusicRepository, MusicRepository>();
+
+            // Add generic repository
+            services.AddScoped<IGenericRepository<User>, GenericRepository<User>>();
+            services.AddScoped<IGenericRepository<Background>, GenericRepository<Background>>();
+            services.AddScoped<IGenericRepository<Music>, GenericRepository<Music>>();
+
+            // Add services
+            //services.AddScoped<IUserService, UserService>();
+            //services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IBackgroundItemService, BackgroundItemService>();
+            services.AddScoped<IMusicService, MusicService>();
+
+            // Add unit of work
+            services.AddScoped<IUnitOfWork, UnitOFWork>();
 
             return services;
         }
