@@ -1,6 +1,13 @@
+using Microsoft.EntityFrameworkCore;
+using Repository;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+// Adding ApplicationDbContext with SQL Server
+builder.Services.AddDbContext<CapyLofiDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("PhucString")));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -15,6 +22,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
