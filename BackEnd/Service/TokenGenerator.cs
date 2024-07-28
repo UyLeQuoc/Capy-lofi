@@ -7,7 +7,7 @@ using Service.Interfaces;
 
 namespace Service;
 
-public class TokenGenerators : ITokenGenerators
+public class TokenGenerators
 {
     private readonly IConfiguration _configuration;
 
@@ -16,30 +16,66 @@ public class TokenGenerators : ITokenGenerators
         _configuration = configuration;
     }
 
-    public (string accessToken, string refreshToken) GenerateTokens(List<Claim> claims)
+    public (string accessToken, string refreshToken) GenerateTokens(IEnumerable<Claim>? claims = null)
     {
-        // Generate access token
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _configuration["JwtSettings:Issuer"],
-            audience: _configuration["JwtSettings:Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddMinutes(30), 
-            signingCredentials: creds
+        var accessToken = GenerateToken(
+            _configuration["AccessTokenSecret"],
+            _configuration["Issuer"],
+            _configuration["Audience"],
+            double.Parse(_configuration["AccessTokenExpirationMinutes"]),
+            claims
         );
 
-        var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
-
-        // Generate refresh token
-        var refreshToken = Guid.NewGuid().ToString();
+        var refreshToken = GenerateToken(
+            _configuration["RefreshTokenSecret"],
+            _configuration["Issuer"],
+            _configuration["Audience"],
+            double.Parse(_configuration["refreshTokenExpirationMinutes"]),
+            claims
+        );
 
         return (accessToken, refreshToken);
     }
 
-    public bool ValidateRefreshToken(string token)
+    private string GenerateToken(string secretKey, string issuer, string audience, double expirationMinutes, IEnumerable<Claim>? claims = null)
     {
-        return Guid.TryParse(token, out _);
+        SecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+        SigningCredentials credentials = new(key, SecurityAlgorithms.HmacSha256);
+
+        JwtSecurityToken token = new(
+            issuer,
+            audience,
+            claims,
+            DateTime.UtcNow,
+            DateTime.UtcNow.AddMinutes(expirationMinutes),
+            credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public bool ValidateRefreshToken(string refreshToken)
+    {
+        TokenValidationParameters validationParameters = new()
+        {
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["RefreshTokenSecret"])),
+            ValidIssuer = _configuration["Issuer"],
+            ValidAudience = _configuration["Audience"],
+            ValidateIssuerSigningKey = true,
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ClockSkew = TimeSpan.Zero,
+        };
+
+        JwtSecurityTokenHandler tokenHandler = new();
+        try
+        {
+            tokenHandler.ValidateToken(refreshToken, validationParameters, out SecurityToken validatedToken);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
     }
 }

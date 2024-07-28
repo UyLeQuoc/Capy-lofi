@@ -25,16 +25,17 @@ namespace Repository
             try
             {
                 entity.CreatedAt = _timeService.GetCurrentTime();
-                //var user = await _dbContext.Users.FindAsync(_claimsService.GetCurrentUserId);
-                //if (user == null) throw new Exception("This user is no longer existed");
+                var user = await _dbContext.Users.FindAsync(_claimsService.GetCurrentUserId);
+                if (user != null) throw new Exception("This user is no longer existed");
                 entity.CreatedBy = _claimsService.GetCurrentUserId;
                 var result = await _dbSet.AddAsync(entity);
-                //await _dbContext.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync();
                 return result.Entity;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                // Log the exception (not implemented here)
+                throw new Exception("An error occurred while adding the entity", ex);
             }
         }
 
@@ -137,77 +138,5 @@ namespace Repository
         {
             return _dbSet;
         }
-
-        //private readonly StudentEventForumDbContext _dbContext;
-        //private readonly DbSet<TEntity> _dbSet;
-
-        //public GenericRepository(StudentEventForumDbContext dbContext)
-        //{
-        //    _dbContext = dbContext;
-        //    _dbSet = dbContext.Set<TEntity>();
-        //}
-
-        //public IQueryable<TEntity> GetAll()
-        //    => _dbSet;
-
-        //public IQueryable<TEntity> FindByCondition(Expression<Func<TEntity, bool>> predicate)
-        //    => _dbSet.Where(predicate);
-
-        //public TEntity? FirstOrDefault(Expression<Func<TEntity, bool>> predicate) => _dbSet.FirstOrDefault(predicate);
-
-        //public async Task<TEntity?> GetByIdAsync(TKey id)
-        //    => await _dbSet.FindAsync(id);
-        //public async Task<TEntity?> GetByIdCompositeKeyAsync(TKey id1, TKey id2)
-        //    => await _dbSet.FindAsync(id1, id2);
-        //public async Task<TEntity> AddAsync(TEntity entity)
-        //{
-        //    var entityEntry = await _dbContext.Set<TEntity>().AddAsync(entity);
-        //    return entityEntry.Entity;
-        //}
-
-        //public TEntity Update(TEntity entity)
-        //{
-        //    var entityEntry = _dbContext.Set<TEntity>().Update(entity);
-        //    return entityEntry.Entity;
-        //}
-
-        //public TEntity Remove(TKey id)
-        //{
-        //    var entity = GetByIdAsync(id).Result;
-        //    var entityEntry = _dbContext.Set<TEntity>().Remove(entity!);
-        //    return entityEntry.Entity;
-        //}
-        //public TEntity RemoveCompositeKey(TKey id1, TKey id2)
-        //{
-        //    var entity = GetByIdCompositeKeyAsync(id1, id2).Result;
-        //    var entityEntry = _dbContext.Set<TEntity>().Remove(entity!);
-        //    return entityEntry.Entity;
-        //}
-
-        //public Task<int> Commit() => _dbContext.SaveChangesAsync();
-
-        //public async Task<int> CountAsync()
-        //{
-        //    var count = await _dbSet.CountAsync();
-        //    return count;
-        //}
-
-        //public async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate)
-        //{
-        //    var count = await _dbSet.CountAsync(predicate);
-        //    return count;
-        //}
-
-        //public async Task<IEnumerable<TEntity>> GetTopNItems<TKeyProperty>(Expression<Func<TEntity, TKeyProperty>> keySelector, int n)
-        //{
-        //    var items = await _dbSet.OrderBy(keySelector).Take(n).ToListAsync();
-        //    return items;
-        //}
-
-        //public async Task AddRangeAsync(IEnumerable<TEntity> entities)
-        //{
-        //    await _dbContext.Set<TEntity>().AddRangeAsync(entities);
-        //    await _dbContext.SaveChangesAsync();
-        //}
     }
 }

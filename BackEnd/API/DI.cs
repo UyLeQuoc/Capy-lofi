@@ -13,6 +13,8 @@ using Service.Services;
 
 namespace API.Dependencies
 {
+    namespace API.Dependencies
+{
     public static class DI
     {
         public static IServiceCollection AddProjectServices(this IServiceCollection services, IConfiguration configuration)
@@ -33,21 +35,20 @@ namespace API.Dependencies
                 {
                     options.ClientId = configuration["Authentication:Google:ClientId"];
                     options.ClientSecret = configuration["Authentication:Google:ClientSecret"];
-                    options.CallbackPath = new PathString("/api/auth/google-callback"); // Ensure this matches the Google API Console
                 });
 
-            services.AddScoped<IAuthenticationService, GoogleAuthenticationService>();
-            services.AddScoped<ITokenGenerators, TokenGenerators>();
             services.AddScoped<ICurrentTime, CurrentTime>();
             services.AddScoped<IClaimsService, ClaimsService>();
 
             // Add UNIT OF WORK
             services.AddProjectUnitOfWork();
 
+            // Register IAuthenticationService
+            services.AddScoped<IAuthenticationService, AuthenticationService>();
+
             //Others
             services.AddAutoMapper(typeof(MapperConfigProfile).Assembly);
             services.AddHttpContextAccessor();
-            services.AddHttpClient<GoogleAuthenticationService>();
 
             return services;
         }
@@ -66,10 +67,10 @@ namespace API.Dependencies
             services.AddScoped<IGenericRepository<Music>, GenericRepository<Music>>();
 
             // Add services
-            //services.AddScoped<IUserService, UserService>();
-            //services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IBackgroundItemService, BackgroundItemService>();
             services.AddScoped<IMusicService, MusicService>();
+            services.AddSingleton<TokenGenerators>();
 
             // Add unit of work
             services.AddScoped<IUnitOfWork, UnitOFWork>();
@@ -77,4 +78,6 @@ namespace API.Dependencies
             return services;
         }
     }
+}
+
 }
