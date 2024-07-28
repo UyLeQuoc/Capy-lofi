@@ -1,18 +1,18 @@
-using Microsoft.EntityFrameworkCore;
-using Repository;
+using API.Dependencies;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddProjectServices(builder.Configuration); // Using the DI class for dependency injection
 
-// Adding ApplicationDbContext with SQL Server
-builder.Services.AddDbContext<CapyLofiDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("PhucString")));
-
+// Add controllers and Swagger
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "CapyLofi API", Version = "v1" });
+});
 
 var app = builder.Build();
 
@@ -20,13 +20,16 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "CapyLofi API v1");
+    });
 }
 
 app.UseHttpsRedirection();
+app.UseRouting();
 
+app.UseAuthentication(); // Ensure this comes before UseAuthorization
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

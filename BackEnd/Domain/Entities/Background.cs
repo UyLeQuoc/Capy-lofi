@@ -3,6 +3,7 @@
 public class Background : BaseEntity
 {
     public string Name { get; set; }
+    public string Description { get; set; }
     public string BackgroundUrl { get; set; }
     public float Size { get; set; }
     public int Price { get; set; }
