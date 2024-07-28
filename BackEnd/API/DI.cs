@@ -8,6 +8,7 @@ using Repository.Interfaces;
 using Repository.Repositories;
 using Service;
 using Service.Interfaces;
+using Service.Mappers;
 using Service.Services;
 
 namespace API.Dependencies
@@ -43,6 +44,8 @@ namespace API.Dependencies
             // Add UNIT OF WORK
             services.AddProjectUnitOfWork();
 
+            //Others
+            services.AddAutoMapper(typeof(MapperConfigProfile).Assembly);
             services.AddHttpContextAccessor();
             services.AddHttpClient<GoogleAuthenticationService>();
 
