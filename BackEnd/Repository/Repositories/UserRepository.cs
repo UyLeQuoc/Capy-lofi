@@ -21,5 +21,10 @@ namespace Repository
         {
             await AddAsync(user);
         }
+
+        public async Task<bool> UpdateUser(User user)
+        {
+           return await UpdateUser(user);
+        }
     }
 }

@@ -71,7 +71,7 @@ namespace Service
         }
 
         
-        public async Task<ApiResult<object>> UserGetInfoSignUpByGoogle(string token)
+       public async Task<ApiResult<object>> UserGetInfoSignUpByGoogle(string token)
 {
     try
     {
@@ -96,42 +96,57 @@ namespace Service
 
         var userEmail = payload.Email;
         var userFullName = payload.Name;
+        var userPhotoUrl = payload.Picture ?? string.Empty;
+
         var isCheckUser = await _userRepository.GetUserByEmail(userEmail);
 
         if (isCheckUser != null)
         {
-            return ApiResult<object>.Error(null, "This email already exists!");
+            // Update the user information from Google
+            isCheckUser.Name = userFullName;
+            isCheckUser.DisplayName = userFullName;
+            isCheckUser.PhotoUrl = userPhotoUrl;
+
+            await _userRepository.UpdateUser(isCheckUser);
+
+            // Create an object to store user details
+            var updatedUserDetails = new { Email = userEmail, Name = userFullName };
+
+            return ApiResult<object>.Succeed(updatedUserDetails, "User information updated successfully.");
         }
-
-        // Create a new user entity with all necessary fields populated
-        var newUser = new User
+        else
         {
-            Email = userEmail,
-            Name = userFullName,
-            DisplayName = userFullName, // Assuming display name is the same as full name
-            PhotoUrl = payload.Picture ?? string.Empty,
-            Coins = 0, // Assuming default coins are 0
-            ProfileInfo = string.Empty, // Assuming default profile info is empty
-            RefreshToken = string.Empty, // Assuming default refresh token is empty
-            LearningSessions = new List<LearningSession>(),
-            Orders = new List<Order>(),
-            UserMusics = new List<UserMusic>(),
-            UserBackgrounds = new List<UserBackground>(),
-            Feedbacks = new List<Feedback>()
-        };
+            // Create a new user entity with all necessary fields populated
+            var newUser = new User
+            {
+                Email = userEmail,
+                Name = userFullName,
+                DisplayName = userFullName, // Assuming display name is the same as full name
+                PhotoUrl = userPhotoUrl,
+                Coins = 0, // Assuming default coins are 0
+                ProfileInfo = string.Empty, // Assuming default profile info is empty
+                RefreshToken = string.Empty, // Assuming default refresh token is empty
+                LearningSessions = new List<LearningSession>(),
+                Orders = new List<Order>(),
+                UserMusics = new List<UserMusic>(),
+                UserBackgrounds = new List<UserBackground>(),
+                Feedbacks = new List<Feedback>()
+            };
 
-        await _userRepository.RegisterUser(newUser);
+            await _userRepository.RegisterUser(newUser);
 
-        // Create an object to store user details
-        var userDetails = new { Email = userEmail, Name = userFullName };
+            // Create an object to store user details
+            var userDetails = new { Email = userEmail, Name = userFullName };
 
-        return ApiResult<object>.Succeed(userDetails, "Successfully registered.");
+            return ApiResult<object>.Succeed(userDetails, "Successfully registered.");
+        }
     }
     catch (Exception ex)
     {
         return ApiResult<object>.Fail(ex);
     }
 }
+
 
 
     }

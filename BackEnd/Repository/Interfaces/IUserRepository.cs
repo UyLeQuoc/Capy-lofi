@@ -6,4 +6,5 @@ public interface IUserRepository : IGenericRepository<User>
 {
     Task<User> GetUserByEmail(string email);
     Task RegisterUser(User user);
+    Task<bool> UpdateUser(User user);
 }

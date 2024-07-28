@@ -118,7 +118,7 @@ namespace Repository
             entity.ModifiedAt = _timeService.GetCurrentTime();
             entity.ModifiedBy = _claimsService.GetCurrentUserId;
             _dbSet.Update(entity);
-            //   await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
             return true;
         }
 
