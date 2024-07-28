@@ -8,6 +8,7 @@ public class User : BaseEntity
     public string PhotoUrl { get; set; }
     public int Coins { get; set; }
     public string ProfileInfo { get; set; }
+    public string RefreshToken { get; set; }
 
     public ICollection<LearningSession> LearningSessions { get; set; }
     public ICollection<Order> Orders { get; set; }

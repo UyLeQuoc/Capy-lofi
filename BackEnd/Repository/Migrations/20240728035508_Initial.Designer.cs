@@ -12,7 +12,7 @@ using Repository;
 namespace Repository.Migrations
 {
     [DbContext(typeof(CapyLofiDbContext))]
-    [Migration("20240728025958_Initial")]
+    [Migration("20240728035508_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
