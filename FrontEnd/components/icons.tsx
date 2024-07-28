@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 export function UsersIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -122,5 +124,18 @@ export function VercelLogo(props: React.SVGProps<SVGSVGElement>) {
         fill="currentColor"
       ></path>
     </svg>
+  );
+}
+
+export function CapyLofiLogo(props: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div {...props} className={`relative w-full h-full ${props.className}`}>
+      <Image
+        src="/CapyLofiLogo.png"
+        layout="fill"
+        objectFit="contain"
+        alt="Logo"
+      />
+    </div>
   );
 }
