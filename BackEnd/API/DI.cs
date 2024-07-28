@@ -1,12 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.EntityFrameworkCore;
 using Repository;
 using Repository.Commons;
 using Repository.Interfaces;
-using Service.Interfaces;
 using Service;
+using Service.Interfaces;
 
 namespace API.Dependencies
 {
@@ -30,7 +29,7 @@ namespace API.Dependencies
                 {
                     options.ClientId = configuration["Authentication:Google:ClientId"];
                     options.ClientSecret = configuration["Authentication:Google:ClientSecret"];
-                    options.CallbackPath = "/api/auth/google-callback"; // Ensure this matches the Google API Console
+                    options.CallbackPath = new PathString("/api/auth/google-callback"); // Ensure this matches the Google API Console
                 });
 
             services.AddScoped<IAuthenticationService, GoogleAuthenticationService>();
@@ -39,7 +38,7 @@ namespace API.Dependencies
             services.AddScoped<ITokenGenerators, TokenGenerators>();
             services.AddScoped<ICurrentTime, CurrentTime>();
             services.AddScoped<IClaimsService, ClaimsService>();
-            services.AddHttpContextAccessor(); 
+            services.AddHttpContextAccessor();
             services.AddHttpClient<GoogleAuthenticationService>();
 
             return services;

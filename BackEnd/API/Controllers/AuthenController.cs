@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using Service.Interfaces;
-using Microsoft.Extensions.Configuration;
 
 namespace API.Controllers
 {
@@ -37,8 +35,15 @@ namespace API.Controllers
         [HttpGet("google-callback")]
         public async Task<IActionResult> HandleGoogleCallback([FromQuery] string code)
         {
-            var result = await _authenticationService.HandleGoogleCallbackAsync(code);
-            return Ok(result);
+            try
+            {
+                var result = await _authenticationService.HandleGoogleCallbackAsync(code);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

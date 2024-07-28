@@ -1,15 +1,12 @@
-﻿using Google.Apis.Auth;
-using Microsoft.Extensions.Configuration;
-using Service.Interfaces;
-using System.Security.Claims;
-using Domain.DTOs.Response;
+﻿using Domain.DTOs.Response;
 using Domain.Entities;
+using Google.Apis.Auth;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using Repository.Interfaces;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System;
-using System.Collections.Generic;
+using Service.Interfaces;
+using System.Security.Claims;
+using System.Web;
 
 namespace Service
 {
@@ -35,8 +32,8 @@ namespace Service
             try
             {
                 var clientId = _configuration["Authentication:Google:ClientId"];
-                var redirectUri = "http://localhost:5278/api/auth/google-callback"; // Ensure this matches the Google API Console
-                var loginUrl = $"https://accounts.google.com/o/oauth2/auth?client_id={clientId}&redirect_uri={redirectUri}&response_type=code&scope=openid%20email%20profile";
+                var redirectUri = HttpUtility.UrlEncode("http://localhost:5278/api/auth/google-callback"); // Ensure this matches the Google API Console
+                var loginUrl = $"https://accounts.google.com/o/oauth2/auth?client_id={clientId}&access_type=online&redirect_uri={redirectUri}&response_type=code&scope=openid%20email%20profile";
                 return Task.FromResult(loginUrl);
             }
             catch (Exception ex)
@@ -81,7 +78,7 @@ namespace Service
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("Failed to handle Google callback.", ex);
+                throw new Exception("Failed to handle Google callback.", ex);
             }
         }
 
@@ -103,7 +100,11 @@ namespace Service
                 response.EnsureSuccessStatusCode();
 
                 var responseString = await response.Content.ReadAsStringAsync();
-                return JObject.Parse(responseString).ToObject<TokenResponse>();
+                return new TokenResponse
+                {
+                    AccessToken = JObject.Parse(responseString).Value<string>("access_token"),
+                    IdToken = JObject.Parse(responseString).Value<string>("id_token")
+                };
             }
             catch (HttpRequestException httpEx)
             {
@@ -136,5 +137,5 @@ namespace Service
         }
     }
 
-    
+
 }

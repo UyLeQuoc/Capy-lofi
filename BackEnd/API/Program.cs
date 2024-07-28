@@ -1,12 +1,4 @@
 using API.Dependencies;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
-using Repository;
-using Repository.Interfaces;
-using Service.Interfaces;
-using Service;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +27,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseRouting();
+
 app.UseAuthentication(); // Ensure this comes before UseAuthorization
 app.UseAuthorization();
 app.MapControllers();
