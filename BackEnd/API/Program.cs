@@ -1,5 +1,4 @@
 using API.Dependencies;
-using API.Dependencies.API.Dependencies;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);

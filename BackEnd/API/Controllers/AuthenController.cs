@@ -35,11 +35,11 @@ namespace API.Controllers
         /// Signs up a user using Google authentication.
         /// </summary>
         [HttpPost("user/google-signup")]
-        public async Task<IActionResult> StudentSignupByGoogle([FromQuery] string token)
+        public async Task<IActionResult> StudentSignupByGoogle([FromBody] string id_token)
         {
             try
             {
-                var checkToken = await _authenticationService.UserGetInfoSignUpByGoogle(token);
+                var checkToken = await _authenticationService.UserGetInfoSignUpByGoogle(id_token);
                 return Ok(checkToken);
             }
             catch (ApplicationException ex)

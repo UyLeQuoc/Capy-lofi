@@ -18,19 +18,43 @@ public class TokenGenerators
 
     public (string accessToken, string refreshToken) GenerateTokens(IEnumerable<Claim>? claims = null)
     {
+        var jwtSettings = _configuration.GetSection("JwtSettings");
+
+        // Validate and log configuration values
+        var accessTokenSecret = jwtSettings["SecretKey"];
+        var refreshTokenSecret = jwtSettings["SecretKey"]; // Assuming the same secret key is used for refresh tokens
+        var issuer = jwtSettings["Issuer"];
+        var audience = jwtSettings["Audience"];
+        var accessTokenExpirationMinutes = jwtSettings["AccessTokenExpirationMinutes"];
+        var refreshTokenExpirationMinutes = jwtSettings["RefreshTokenExpirationMinutes"];
+
+        if (string.IsNullOrEmpty(accessTokenSecret) || string.IsNullOrEmpty(refreshTokenSecret) ||
+            string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(audience) ||
+            string.IsNullOrEmpty(accessTokenExpirationMinutes) || string.IsNullOrEmpty(refreshTokenExpirationMinutes))
+        {
+            throw new ArgumentNullException("One or more configuration values are null or empty.");
+        }
+
+        Console.WriteLine($"AccessTokenSecret: {accessTokenSecret}");
+        Console.WriteLine($"RefreshTokenSecret: {refreshTokenSecret}");
+        Console.WriteLine($"Issuer: {issuer}");
+        Console.WriteLine($"Audience: {audience}");
+        Console.WriteLine($"AccessTokenExpirationMinutes: {accessTokenExpirationMinutes}");
+        Console.WriteLine($"RefreshTokenExpirationMinutes: {refreshTokenExpirationMinutes}");
+
         var accessToken = GenerateToken(
-            _configuration["AccessTokenSecret"],
-            _configuration["Issuer"],
-            _configuration["Audience"],
-            double.Parse(_configuration["AccessTokenExpirationMinutes"]),
+            accessTokenSecret,
+            issuer,
+            audience,
+            double.Parse(accessTokenExpirationMinutes),
             claims
         );
 
         var refreshToken = GenerateToken(
-            _configuration["RefreshTokenSecret"],
-            _configuration["Issuer"],
-            _configuration["Audience"],
-            double.Parse(_configuration["refreshTokenExpirationMinutes"]),
+            refreshTokenSecret,
+            issuer,
+            audience,
+            double.Parse(refreshTokenExpirationMinutes),
             claims
         );
 
@@ -46,9 +70,9 @@ public class TokenGenerators
             issuer,
             audience,
             claims,
-            DateTime.UtcNow,
-            DateTime.UtcNow.AddMinutes(expirationMinutes),
-            credentials
+            notBefore: DateTime.UtcNow,
+            expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+            signingCredentials: credentials
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
@@ -58,9 +82,9 @@ public class TokenGenerators
     {
         TokenValidationParameters validationParameters = new()
         {
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["RefreshTokenSecret"])),
-            ValidIssuer = _configuration["Issuer"],
-            ValidAudience = _configuration["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"])),
+            ValidIssuer = _configuration["JwtSettings:Issuer"],
+            ValidAudience = _configuration["JwtSettings:Audience"],
             ValidateIssuerSigningKey = true,
             ValidateIssuer = true,
             ValidateAudience = true,
@@ -73,7 +97,7 @@ public class TokenGenerators
             tokenHandler.ValidateToken(refreshToken, validationParameters, out SecurityToken validatedToken);
             return true;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return false;
         }

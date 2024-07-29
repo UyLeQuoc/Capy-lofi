@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Jose;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.EntityFrameworkCore;
@@ -13,23 +14,26 @@ using Service.Services;
 
 namespace API.Dependencies
 {
-    namespace API.Dependencies
-{
     public static class DI
     {
         public static IServiceCollection AddProjectServices(this IServiceCollection services, IConfiguration configuration)
         {
+            // Bind JwtSettings
+            var jwtSettings = new JwtSettings();
+            configuration.GetSection("JwtSettings").Bind(jwtSettings);
+            services.AddSingleton(jwtSettings);
+
             // Add ApplicationDbContext with SQL Server
             services.AddDbContext<CapyLofiDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("PhucString")));
 
             // Add authentication services
             services.AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-                })
+            {
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+            })
                 .AddCookie()
                 .AddGoogle(options =>
                 {
@@ -42,9 +46,6 @@ namespace API.Dependencies
 
             // Add UNIT OF WORK
             services.AddProjectUnitOfWork();
-
-            // Register IAuthenticationService
-            services.AddScoped<IAuthenticationService, AuthenticationService>();
 
             //Others
             services.AddAutoMapper(typeof(MapperConfigProfile).Assembly);
@@ -78,6 +79,6 @@ namespace API.Dependencies
             return services;
         }
     }
-}
+
 
 }
