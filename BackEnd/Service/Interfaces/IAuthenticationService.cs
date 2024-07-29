@@ -1,10 +1,13 @@
 ﻿using Domain.DTOs;
 using Domain.DTOs.Response;
+using Repository.Commons;
 
 namespace Service.Interfaces;
 
 public interface IAuthenticationService
 {
-    Task<string> GetGoogleLoginUrlAsync();
-    Task<Authenticator> HandleGoogleCallbackAsync(string code);
+    Task<Authenticator> AuthenGoogleUser(string token);
+    Task<ApiResult<object>> UserGetInfoSignUpByGoogle(string token);
+
+
 }

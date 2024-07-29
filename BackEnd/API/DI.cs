@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Jose;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.EntityFrameworkCore;
@@ -17,27 +18,29 @@ namespace API.Dependencies
     {
         public static IServiceCollection AddProjectServices(this IServiceCollection services, IConfiguration configuration)
         {
+            // Bind JwtSettings
+            var jwtSettings = new JwtSettings();
+            configuration.GetSection("JwtSettings").Bind(jwtSettings);
+            services.AddSingleton(jwtSettings);
+
             // Add ApplicationDbContext with SQL Server
             services.AddDbContext<CapyLofiDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("PhucString")));
 
             // Add authentication services
             services.AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-                })
+            {
+                options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+            })
                 .AddCookie()
                 .AddGoogle(options =>
                 {
                     options.ClientId = configuration["Authentication:Google:ClientId"];
                     options.ClientSecret = configuration["Authentication:Google:ClientSecret"];
-                    options.CallbackPath = new PathString("/api/auth/google-callback"); // Ensure this matches the Google API Console
                 });
 
-            services.AddScoped<IAuthenticationService, GoogleAuthenticationService>();
-            services.AddScoped<ITokenGenerators, TokenGenerators>();
             services.AddScoped<ICurrentTime, CurrentTime>();
             services.AddScoped<IClaimsService, ClaimsService>();
 
@@ -47,7 +50,6 @@ namespace API.Dependencies
             //Others
             services.AddAutoMapper(typeof(MapperConfigProfile).Assembly);
             services.AddHttpContextAccessor();
-            services.AddHttpClient<GoogleAuthenticationService>();
 
             return services;
         }
@@ -66,10 +68,10 @@ namespace API.Dependencies
             services.AddScoped<IGenericRepository<Music>, GenericRepository<Music>>();
 
             // Add services
-            //services.AddScoped<IUserService, UserService>();
-            //services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IBackgroundItemService, BackgroundItemService>();
             services.AddScoped<IMusicService, MusicService>();
+            services.AddSingleton<TokenGenerators>();
 
             // Add unit of work
             services.AddScoped<IUnitOfWork, UnitOFWork>();
@@ -77,4 +79,6 @@ namespace API.Dependencies
             return services;
         }
     }
+
+
 }

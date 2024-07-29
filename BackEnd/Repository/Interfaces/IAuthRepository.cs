@@ -3,6 +3,12 @@
 namespace Repository.Interfaces;
 public interface IAuthRepository
 {
-    Task UpdateRefreshToken(int userId, string refreshToken);
-    Task<User> GetRefreshToken(string token);
+    Task<bool> CreateUser(User user);
+
+    Task<bool> UpdateRefreshToken(int user, string refreshToken);
+    
+    Task<User> GetRefreshToken(string refreshToken);
+    
+    Task<bool> DeleteRefreshToken(int userId);
+
 }

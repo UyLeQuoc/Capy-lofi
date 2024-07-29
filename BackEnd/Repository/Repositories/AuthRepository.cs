@@ -7,26 +7,50 @@ namespace Repository
 {
     public class AuthRepository : IAuthRepository
     {
-        private readonly CapyLofiDbContext _dbContext;
+        private readonly CapyLofiDbContext _context;
 
-        public AuthRepository(CapyLofiDbContext dbContext)
+        public AuthRepository(CapyLofiDbContext context)
         {
-            _dbContext = dbContext;
+            _context = context;
         }
 
-        public async Task UpdateRefreshToken(int userId, string refreshToken)
+        public async Task<bool> CreateUser(User user)
         {
-            var user = await _dbContext.Users.FindAsync(userId);
+            await _context.AddAsync(user);
+            return await SaveChange();
+        }
+
+        public async Task<bool> UpdateRefreshToken(int userId, string refreshToken)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (user != null)
             {
                 user.RefreshToken = refreshToken;
-                await _dbContext.SaveChangesAsync();
+                return await SaveChange();
             }
+            return false;
         }
 
-        public async Task<User> GetRefreshToken(string token)
+        public async Task<User> GetRefreshToken(string refreshToken)
         {
-            return await _dbContext.Users.FirstOrDefaultAsync(u => u.RefreshToken == token);
+            return await _context.Users.FirstOrDefaultAsync(r => r.RefreshToken == refreshToken);
+        }
+
+        public async Task<bool> DeleteRefreshToken(int userId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user != null)
+            {
+                user.RefreshToken = "";
+                return await SaveChange();
+            }
+            return false;
+        }
+
+        public async Task<bool> SaveChange()
+        {
+            var save = await _context.SaveChangesAsync();
+            return save > 0;
         }
     }
 }

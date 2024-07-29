@@ -7,7 +7,7 @@ using Service.Interfaces;
 
 namespace Service;
 
-public class TokenGenerators : ITokenGenerators
+public class TokenGenerators
 {
     private readonly IConfiguration _configuration;
 
@@ -16,30 +16,90 @@ public class TokenGenerators : ITokenGenerators
         _configuration = configuration;
     }
 
-    public (string accessToken, string refreshToken) GenerateTokens(List<Claim> claims)
+    public (string accessToken, string refreshToken) GenerateTokens(IEnumerable<Claim>? claims = null)
     {
-        // Generate access token
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var jwtSettings = _configuration.GetSection("JwtSettings");
 
-        var token = new JwtSecurityToken(
-            issuer: _configuration["JwtSettings:Issuer"],
-            audience: _configuration["JwtSettings:Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddMinutes(30), 
-            signingCredentials: creds
+        // Validate and log configuration values
+        var accessTokenSecret = jwtSettings["SecretKey"];
+        var refreshTokenSecret = jwtSettings["SecretKey"]; // Assuming the same secret key is used for refresh tokens
+        var issuer = jwtSettings["Issuer"];
+        var audience = jwtSettings["Audience"];
+        var accessTokenExpirationMinutes = jwtSettings["AccessTokenExpirationMinutes"];
+        var refreshTokenExpirationMinutes = jwtSettings["RefreshTokenExpirationMinutes"];
+
+        if (string.IsNullOrEmpty(accessTokenSecret) || string.IsNullOrEmpty(refreshTokenSecret) ||
+            string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(audience) ||
+            string.IsNullOrEmpty(accessTokenExpirationMinutes) || string.IsNullOrEmpty(refreshTokenExpirationMinutes))
+        {
+            throw new ArgumentNullException("One or more configuration values are null or empty.");
+        }
+
+        Console.WriteLine($"AccessTokenSecret: {accessTokenSecret}");
+        Console.WriteLine($"RefreshTokenSecret: {refreshTokenSecret}");
+        Console.WriteLine($"Issuer: {issuer}");
+        Console.WriteLine($"Audience: {audience}");
+        Console.WriteLine($"AccessTokenExpirationMinutes: {accessTokenExpirationMinutes}");
+        Console.WriteLine($"RefreshTokenExpirationMinutes: {refreshTokenExpirationMinutes}");
+
+        var accessToken = GenerateToken(
+            accessTokenSecret,
+            issuer,
+            audience,
+            double.Parse(accessTokenExpirationMinutes),
+            claims
         );
 
-        var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
-
-        // Generate refresh token
-        var refreshToken = Guid.NewGuid().ToString();
+        var refreshToken = GenerateToken(
+            refreshTokenSecret,
+            issuer,
+            audience,
+            double.Parse(refreshTokenExpirationMinutes),
+            claims
+        );
 
         return (accessToken, refreshToken);
     }
 
-    public bool ValidateRefreshToken(string token)
+    private string GenerateToken(string secretKey, string issuer, string audience, double expirationMinutes, IEnumerable<Claim>? claims = null)
     {
-        return Guid.TryParse(token, out _);
+        SecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+        SigningCredentials credentials = new(key, SecurityAlgorithms.HmacSha256);
+
+        JwtSecurityToken token = new(
+            issuer,
+            audience,
+            claims,
+            notBefore: DateTime.UtcNow,
+            expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public bool ValidateRefreshToken(string refreshToken)
+    {
+        TokenValidationParameters validationParameters = new()
+        {
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"])),
+            ValidIssuer = _configuration["JwtSettings:Issuer"],
+            ValidAudience = _configuration["JwtSettings:Audience"],
+            ValidateIssuerSigningKey = true,
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ClockSkew = TimeSpan.Zero,
+        };
+
+        JwtSecurityTokenHandler tokenHandler = new();
+        try
+        {
+            tokenHandler.ValidateToken(refreshToken, validationParameters, out SecurityToken validatedToken);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 }
