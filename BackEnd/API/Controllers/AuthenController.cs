@@ -4,7 +4,7 @@ using Service.Interfaces;
 
 namespace API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/authentication")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -18,6 +18,8 @@ namespace API.Controllers
         }
 
         [HttpPost("google-login")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GoogleLogin([FromBody] string token)
         {
             try
@@ -30,11 +32,13 @@ namespace API.Controllers
                 return BadRequest(ex.Message);
             }
         }
-        
+
         /// <summary>
         /// Signs up a user using Google authentication.
         /// </summary>
-        [HttpPost("user/google-signup")]
+        [HttpPost("google-signup")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> StudentSignupByGoogle([FromBody] string id_token)
         {
             try
